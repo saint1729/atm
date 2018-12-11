@@ -7,7 +7,9 @@ public enum ErrorMessage {
 	AUTHENTICATION_FAILED("Token authentication failed. Generated a new token and resubmit the request."),
 	DUPLICATE_ACCOUNT("An account with that username already exists. Try creating with a new username."),
 	INVALID_ATM_PIN("Entered ATM pin is invalid. Entered a valid 4 digit positive ATM pin."),
-	INVALID_DATA_ENTERED("Enter only User Name, Full Name, Email ID and PIN in payload to successfully create an account.");
+	INVALID_DATA_ENTERED("Enter only User Name, Full Name, Email ID and PIN in payload to successfully create an account."),
+	ATM_PIN_MISMATCH("ATM pin change failed, because old pin entered for the username is wrong."),
+	ATM_PIN_MATCH("ATM pin change failed, because old pin and new pin entered for the username is same.");
 	
 	private String errorMessage;
 

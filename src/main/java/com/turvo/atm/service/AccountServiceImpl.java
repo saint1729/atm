@@ -9,6 +9,8 @@ import java.util.concurrent.locks.ReentrantLock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.turvo.atm.exception.AccountNotFoundException;
+import com.turvo.atm.exception.AtmPinMatchException;
+import com.turvo.atm.exception.AtmPinMismatchException;
 import com.turvo.atm.exception.AuthenticationFailedException;
 import com.turvo.atm.exception.DuplicateAccountException;
 import com.turvo.atm.exception.ErrorMessage;
@@ -100,6 +102,30 @@ public class AccountServiceImpl implements AccountService {
 				return savedAccount;
 			} else {
 				throw new AuthenticationFailedException(ErrorMessage.AUTHENTICATION_FAILED.getErrorMessage());
+			}
+		}
+	}
+	
+	public Account updateAtmPin(String token, String userName, Integer oldPin, Integer newPin) {
+		Account account = authenticationRepository.findByUserName(userName);
+		
+		if(account == null) {
+			throw new AccountNotFoundException(ErrorMessage.ACCOUNT_NOT_FOUND.getErrorMessage());
+		} else {
+			if(oldPin == newPin) {
+				throw new AtmPinMatchException(ErrorMessage.ATM_PIN_MATCH.getErrorMessage());
+			} else {
+				if(account.getPin().equals(oldPin)) {
+					if(authService.verifyToken(account.getId(), token)) {
+						account.setPin(newPin);
+						Account savedAccount = accountRepository.save(account);
+						return savedAccount;
+					} else {
+						throw new AuthenticationFailedException(ErrorMessage.AUTHENTICATION_FAILED.getErrorMessage());
+					}
+				} else {
+					throw new AtmPinMismatchException(ErrorMessage.ATM_PIN_MISMATCH.getErrorMessage());
+				}
 			}
 		}
 	}

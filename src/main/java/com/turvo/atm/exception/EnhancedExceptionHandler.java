@@ -48,4 +48,16 @@ public class EnhancedExceptionHandler extends ResponseEntityExceptionHandler {
 		return new ResponseEntity<>(errorMessage, HttpStatus.BAD_REQUEST);
 	}
 	
+	@ExceptionHandler(AtmPinMismatchException.class)
+	public final ResponseEntity<String> handleAtmPinMismatchException(Exception e, WebRequest request) {
+		String errorMessage = e.getMessage();
+		return new ResponseEntity<>(errorMessage, HttpStatus.BAD_REQUEST);
+	}
+	
+	@ExceptionHandler(AtmPinMatchException.class)
+	public final ResponseEntity<String> handleAtmPinMatchException(Exception e, WebRequest request) {
+		String errorMessage = e.getMessage();
+		return new ResponseEntity<>(errorMessage, HttpStatus.BAD_REQUEST);
+	}
+	
 }

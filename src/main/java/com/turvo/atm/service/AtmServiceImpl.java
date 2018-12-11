@@ -5,6 +5,9 @@ import java.util.concurrent.locks.ReentrantLock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.turvo.atm.exception.AccountNotFoundException;
+import com.turvo.atm.exception.AuthenticationFailedException;
+import com.turvo.atm.exception.ErrorMessage;
 import com.turvo.atm.model.Account;
 import com.turvo.atm.repository.AccountRepository;
 import com.turvo.atm.repository.AuthenticationRepository;
@@ -25,61 +28,75 @@ public class AtmServiceImpl implements AtmService {
 		
 		Account account = authenticationRepository.findByUserName(userName);
 		
-		if((account != null) && authService.verifyToken(account.getId(), token)) {
-			return account.getBalance();
+		if(account == null) {
+			throw new AccountNotFoundException(ErrorMessage.ACCOUNT_NOT_FOUND.getErrorMessage());
+		} else {
+			if(authService.verifyToken(account.getId(), token)) {
+				return account.getBalance();
+			} else {
+				throw new AuthenticationFailedException(ErrorMessage.AUTHENTICATION_FAILED.getErrorMessage());
+			}
 		}
 		
-		throw new RuntimeException("Invalid account or token authentication failed");
 	}
 
 	public Account withdrawBalance(String token, String userName, Double money) {
 		
 		Account account = authenticationRepository.findByUserName(userName);
 
-		if((account != null) && authService.verifyToken(account.getId(), token)) {
-			double balance = account.getBalance();
-			
-			if(balance < money) {
-				throw new RuntimeException("Low balance");
+		if(account == null) {
+			throw new AccountNotFoundException(ErrorMessage.ACCOUNT_NOT_FOUND.getErrorMessage());
+		} else {
+			if(authService.verifyToken(account.getId(), token)) {
+				double balance = account.getBalance();
+				
+				if(balance < money) {
+					throw new RuntimeException("Low balance");
+				}
+				
+				Account savedAccount = null;
+				
+				lock.lock();
+				try {
+					account.setBalance(balance-money);
+					savedAccount = accountRepository.save(account);
+				} finally {
+					lock.unlock();
+				}
+				
+				return savedAccount;
+			} else {
+				throw new AuthenticationFailedException(ErrorMessage.AUTHENTICATION_FAILED.getErrorMessage());
 			}
-			
-			Account savedAccount = null;
-			
-			lock.lock();
-			try {
-				account.setBalance(balance-money);
-				savedAccount = accountRepository.save(account);
-			} finally {
-				lock.unlock();
-			}
-			
-			return savedAccount;
 		}
-		
-		throw new RuntimeException("Invalid account or token authentication failed");
 	}
 
 	public Account depositBalance(String token, String userName, Double money) {
 		
 		Account account = authenticationRepository.findByUserName(userName);
 
-		if((account != null) && authService.verifyToken(account.getId(), token)) {
-			double balance = account.getBalance();
-			
-			Account savedAccount = null;
-			
-			lock.lock();
-			try {
-				account.setBalance(balance+money);
-				savedAccount = accountRepository.save(account);
-			} finally {
-				lock.unlock();
+		if(account == null) {
+			throw new AccountNotFoundException(ErrorMessage.ACCOUNT_NOT_FOUND.getErrorMessage());
+		} else {
+			if(authService.verifyToken(account.getId(), token)) {
+				double balance = account.getBalance();
+				
+				Account savedAccount = null;
+				
+				lock.lock();
+				try {
+					account.setBalance(balance+money);
+					savedAccount = accountRepository.save(account);
+				} finally {
+					lock.unlock();
+				}
+				
+				return savedAccount;
+			} else {
+				throw new AuthenticationFailedException(ErrorMessage.AUTHENTICATION_FAILED.getErrorMessage());
 			}
-			
-			return savedAccount;
 		}
 
-		throw new RuntimeException("Invalid account or token authentication failed");
 	}
 	
 	
