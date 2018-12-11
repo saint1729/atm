@@ -28,13 +28,9 @@ public class AtmController {
 	
 	@RequestMapping(value = "/deposit/{token}/{userName}/{amount}", method = RequestMethod.POST,
 			produces=MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<Object> depositAmount(@PathVariable("token") String token,
+	public ResponseEntity<Account> depositAmount(@PathVariable("token") String token,
 			@PathVariable("userName") String userName, @PathVariable("amount") double money) {
-		try {
-			return new ResponseEntity<Object>(atmService.depositBalance(token, userName, money), HttpStatus.OK);
-		} catch(Exception e) {
-			return new ResponseEntity<Object>(e.getMessage(), HttpStatus.BAD_REQUEST);
-		}
+		return new ResponseEntity<Account>(atmService.depositBalance(token, userName, money), HttpStatus.OK);
 	}
 	
 	@RequestMapping(value = "/withdraw/{token}/{userName}/{amount}", method = RequestMethod.POST,

@@ -6,10 +6,14 @@ import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
+import com.turvo.atm.exception.AccountNotFoundException;
+import com.turvo.atm.exception.AuthenticationFailedException;
+import com.turvo.atm.exception.DuplicateAccountException;
+import com.turvo.atm.exception.ErrorMessage;
+import com.turvo.atm.exception.InvalidAccountDataException;
+import com.turvo.atm.exception.InvalidAtmPinException;
 import com.turvo.atm.model.Account;
 import com.turvo.atm.repository.AccountRepository;
 import com.turvo.atm.repository.AuthenticationRepository;
@@ -38,9 +42,9 @@ public class AccountServiceImpl implements AccountService {
 		
 		if((userName == null) || (fullName == null) || (userEmail == null) || (pin == null)
 				|| (accountNumber != null) || (balance != null) || (id != null)) {
-			throw new RuntimeException("Enter only User Name, Full Name, Email ID and PIN");
-		} else if((pin < 0) || (pin > 9999)) {
-			throw new RuntimeException("Enter a valid 4 digit PIN");
+			throw new InvalidAccountDataException(ErrorMessage.INVALID_DATA_ENTERED.getErrorMessage());
+		} else if((pin < 1000) || (pin > 9999)) {
+			throw new InvalidAtmPinException(ErrorMessage.INVALID_ATM_PIN.getErrorMessage());
 		}
 		
 		
@@ -50,7 +54,7 @@ public class AccountServiceImpl implements AccountService {
 			Set<Account> set = new HashSet<>(accounts);
 			
 			if(set.contains(account)) {
-				throw new RuntimeException("Username already exists. Choose a different one.");
+				throw new DuplicateAccountException(ErrorMessage.DUPLICATE_ACCOUNT.getErrorMessage());
 			}
 			
 			Random random = new Random();
@@ -70,25 +74,33 @@ public class AccountServiceImpl implements AccountService {
 	
 	public Account updateFullName(String token, String userName, String newFullName) {
 		Account account = authenticationRepository.findByUserName(userName);
-		
-		if((account != null) && authService.verifyToken(account.getId(), token)) {
-			account.setFullName(newFullName);
-			Account savedAccount = accountRepository.save(account);
-			return savedAccount;
+
+		if(account == null) {
+			throw new AccountNotFoundException(ErrorMessage.ACCOUNT_NOT_FOUND.getErrorMessage());
 		} else {
-			throw new RuntimeException("Account not found for user with user name " + userName + " or token authentication failed. Try again.");
+			if(authService.verifyToken(account.getId(), token)) {
+				account.setFullName(newFullName);
+				Account savedAccount = accountRepository.save(account);
+				return savedAccount;
+			} else {
+				throw new AuthenticationFailedException(ErrorMessage.AUTHENTICATION_FAILED.getErrorMessage());
+			}
 		}
 	}
 	
 	public Account updateEmailAddress(String token, String userName, String emailAddress) {
 		Account account = authenticationRepository.findByUserName(userName);
 		
-		if((account != null) && authService.verifyToken(account.getId(), token)) {
-			account.setEmailId(emailAddress);;
-			Account savedAccount = accountRepository.save(account);
-			return savedAccount;
+		if(account == null) {
+			throw new AccountNotFoundException(ErrorMessage.ACCOUNT_NOT_FOUND.getErrorMessage());
 		} else {
-			throw new RuntimeException("Account not found for user with user name " + userName + " or token authentication failed. Try again.");
+			if(authService.verifyToken(account.getId(), token)) {
+				account.setEmailId(emailAddress);;
+				Account savedAccount = accountRepository.save(account);
+				return savedAccount;
+			} else {
+				throw new AuthenticationFailedException(ErrorMessage.AUTHENTICATION_FAILED.getErrorMessage());
+			}
 		}
 	}
 	

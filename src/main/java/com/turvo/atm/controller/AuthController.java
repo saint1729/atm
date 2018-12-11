@@ -23,11 +23,7 @@ public class AuthController {
 	
 	@RequestMapping(value = "", method = RequestMethod.POST, consumes=MediaType.APPLICATION_JSON_VALUE)
 	public ResponseEntity<String> generateToken(@RequestBody Account account) {
-		try {
-			return new ResponseEntity<String>(authService.generateToken(account), HttpStatus.OK);
-		} catch(Exception e) {
-			return new ResponseEntity<String>(e.getMessage(), HttpStatus.BAD_REQUEST);
-		}
+		return new ResponseEntity<String>(authService.generateToken(account), HttpStatus.OK);
 	}
 	
 }
