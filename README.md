@@ -1,7 +1,7 @@
 # atm
 This project exposes highly robust, concurrent and failsafe API’s for the following Automated Teller Machine (ATM) functionalities - cash deposits, cash withdrawals, balance enquiry, pin change.
 
-##Functionality:
+## Functionality:
 
 There is a Swagger-UI available, which documents all the end points in the service.
 
